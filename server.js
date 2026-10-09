@@ -1,40 +1,35 @@
-const http = require('http');
-const url = require('url');
+const express = require('express');
+const axios = require('axios');
+const app = express();
 
-const PORT = 3000;
-const TARGET_HOST = 'tv.m3uts.xyz';
-const OFFICIAL_USER_AGENT = 'Dalvik/2.1.0 (Linux; U; Android 9; SM-S908E Build/TP1A.220624.014)';
+const TARGET_HOST = 'http://tv.m3uts.xyz'; // O el dominio exacto de tu proveedor Magma
 
-const server = http.createServer((req, res) => {
-    console.log(`[+] Petición recibida: ${req.url}`);
-    
-    const options = {
-        hostname: TARGET_HOST,
-        port: 80,
-        path: req.url,
-        method: req.method,
-        headers: {
-            'User-Agent': OFFICIAL_USER_AGENT,
-            'Accept': '*/*',
-            'Connection': 'Keep-Alive',
-            'Host': TARGET_HOST
-        }
-    };
+app.get('*', async (req, res) => {
+    try {
+        const targetUrl = `${TARGET_HOST}${req.url}`;
+        
+        const response = await axios({
+            method: req.method,
+            url: targetUrl,
+            headers: {
+                'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; AFTMM Build/PS7233)',
+                ...req.headers,
+                host: new URL(TARGET_HOST).host
+            },
+            data: req.body,
+            responseType: 'stream',
+            timeout: 15000 // Timeout de seguridad para que no se quede colgado
+        });
 
-    const proxyReq = http.request(options, (proxyRes) => {
-        res.writeHead(proxyRes.statusCode, proxyRes.headers);
-        proxyRes.pipe(res, { end: true });
-    });
-
-    proxyReq.on('error', (err) => {
-        console.error('[-] Error en el proxy:', err.message);
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('Error interno del proxy local');
-    });
-
-    req.pipe(proxyReq, { end: true });
+        response.headers['content-type'] && res.setHeader('content-type', response.headers['content-type']);
+        response.data.pipe(res);
+    } catch (error) {
+        console.error('Error en el proxy:', error.message);
+        res.status(500).send('Error conectando con el servidor Magma');
+    }
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[+] Proxy para Magma corriendo en http://localhost:${PORT}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Proxy corriendo en puerto ${PORT}`);
 });
