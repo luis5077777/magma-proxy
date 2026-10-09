@@ -2,9 +2,9 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
-const TARGET_HOST = 'http://tv.m3uts.xyz';
+const TARGET_HOST = 'https://magmaplayer.com';
 
-// Ruta de comprobación para el navegador
+// Ruta de comprobación para verificar en el navegador que el proxy está activo
 app.get('/', (req, res) => {
     res.send('¡Proxy de Magma funcionando correctamente!');
 });
@@ -17,7 +17,7 @@ app.get('*', async (req, res) => {
             method: req.method,
             url: targetUrl,
             headers: {
-                'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; AFTMM Build/PS7233)',
+                'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; SM-S908E Build/TP1A.220624.014)',
                 ...req.headers,
                 host: new URL(TARGET_HOST).host
             },
