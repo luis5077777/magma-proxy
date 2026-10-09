@@ -2,7 +2,12 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
-const TARGET_HOST = 'http://tv.m3uts.xyz'; // O el dominio exacto de tu proveedor Magma
+const TARGET_HOST = 'http://tv.m3uts.xyz';
+
+// Ruta de comprobación para el navegador
+app.get('/', (req, res) => {
+    res.send('¡Proxy de Magma funcionando correctamente!');
+});
 
 app.get('*', async (req, res) => {
     try {
@@ -18,7 +23,7 @@ app.get('*', async (req, res) => {
             },
             data: req.body,
             responseType: 'stream',
-            timeout: 15000 // Timeout de seguridad para que no se quede colgado
+            timeout: 15000
         });
 
         response.headers['content-type'] && res.setHeader('content-type', response.headers['content-type']);
