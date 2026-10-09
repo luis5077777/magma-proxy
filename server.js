@@ -4,7 +4,6 @@ const app = express();
 
 const TARGET_HOST = 'https://magmaplayer.com';
 
-// Ruta de comprobación para verificar en el navegador que el proxy está activo
 app.get('/', (req, res) => {
     res.send('¡Proxy de Magma funcionando correctamente!');
 });
@@ -23,14 +22,19 @@ app.get('*', async (req, res) => {
             },
             data: req.body,
             responseType: 'stream',
-            timeout: 15000
+            timeout: 20000
         });
 
-        response.headers['content-type'] && res.setHeader('content-type', response.headers['content-type']);
+        Object.keys(response.headers).forEach(key => {
+            res.setHeader(key, response.headers[key]);
+        });
+        
         response.data.pipe(res);
     } catch (error) {
         console.error('Error en el proxy:', error.message);
-        res.status(500).send('Error conectando con el servidor Magma');
+        if (!res.headersSent) {
+            res.status(500).send('Error conectando con el servidor Magma');
+        }
     }
 });
 
